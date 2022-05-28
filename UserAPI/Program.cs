@@ -15,7 +15,7 @@ Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
             .Enrich.FromLogContext()
             .WriteTo.Console()
-            .WriteTo.File("log.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(@"Logs\log.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
 var app = builder.Build();
