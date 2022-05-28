@@ -25,6 +25,12 @@ namespace UserAPI.Controllers
             return user;
         }
 
+        [HttpGet("{email}")]
+        public async Task<bool> CheckIfUserExists(string email)
+        {
+            return await UserDatabase.CheckIfUserExists(email);
+        }
+
         //// POST api/<UsersController>
         //[HttpPost]
         //public void Post([FromBody] string value)

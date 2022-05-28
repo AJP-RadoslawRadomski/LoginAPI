@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Serilog;
 using System.Data.SqlClient;
 
 namespace UserAPI.Data
@@ -8,15 +9,18 @@ namespace UserAPI.Data
         public async static Task<User> GetUser(string email, string password)
         {
             var user = new User();
-            using (SqlConnection cnn = new SqlConnection(@"Data Source=DESKTOP-PI3FG32\SQLEXPRESS;Initial Catalog=Users;Integrated Security=True;TrustServerCertificate=False"))
+            try
             {
+                using SqlConnection cnn = new SqlConnection(@"Data Source=DESKTOP-PI3FG32\SQLEXPRESS;Initial Catalog=Users;Integrated Security=True;TrustServerCertificate=False");
+
                 cnn.Open();
 
                 var dbPassword = await cnn.QuerySingleAsync<string>(@"SELECT Password FROM Users WHERE Email = @Email", new { Email = email });
 
                 if (BCrypt.Net.BCrypt.EnhancedVerify(password, dbPassword))
                 {
-                    user = await cnn.QuerySingleAsync<User>(@"SELECT [Id]
+                    user = await cnn.QuerySingleOrDefaultAsync<User>(@"
+SELECT [Id]
       ,[Email]
       ,[FirstName]
       ,[SurName]
@@ -27,14 +31,25 @@ namespace UserAPI.Data
                         Email = email,
                     });
                 }
+                return user;
             }
-            return user;
+            catch (Exception ex)
+            {
+                Log.Logger.Error(ex.Message);
+                return null;
+            }
         }
 
-        public async static Task RegisterUser(User user)
+        public async static Task<string> RegisterUser(User user)
         {
-            using (SqlConnection cnn = new SqlConnection(@"Data Source=DESKTOP-PI3FG32\SQLEXPRESS;Initial Catalog=Users;Integrated Security=True;TrustServerCertificate=False"))
+            if (await CheckIfUserExists(user.Email))
             {
+                return "Użytkownik o podanym mailu już istnieje";
+            }
+
+            try
+            {
+                using SqlConnection cnn = new SqlConnection(@"Data Source=DESKTOP-PI3FG32\SQLEXPRESS;Initial Catalog=Users;Integrated Security=True;TrustServerCertificate=False");
                 cnn.Open();
                 await cnn.ExecuteAsync(@"INSERT INTO [dbo].[Users]
            ([Email]
@@ -50,7 +65,33 @@ namespace UserAPI.Data
                     FirstName = user.FirstName,
                     SurName = user.Surname
                 });
+                return "Użytkownik został dodany do bazy";
             }
+            catch (Exception ex)
+            {
+                Log.Logger.Error(ex.Message);
+                return "Wystąpił błąd podczas dodawania użytkownika";
+            }
+
+        }
+
+        public async static Task<bool> CheckIfUserExists(string email)
+        {
+            try
+            {
+                using SqlConnection cnn = new SqlConnection(@"Data Source=DESKTOP-PI3FG32\SQLEXPRESS;Initial Catalog=Users;Integrated Security=True;TrustServerCertificate=False");
+                cnn.Open();
+
+                var user = await cnn.QuerySingleOrDefaultAsync<User>(@"SELECT Email FROM Users WHERE Email = @Email", new { Email = email });
+
+                return user != null;
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error(ex.Message);
+                throw;
+            }
+
         }
     }
 }

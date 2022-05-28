@@ -23,11 +23,11 @@ namespace UserAPI.Controllers
 
         // POST api/<RegisterUserController>
         [HttpPost]
-        public async Task Post([FromBody] User user)
+        public async Task<string> Post([FromBody] User user)
         {
             var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(user.Password, 10);
             user.Password = hashedPassword;
-            await UserDatabase.RegisterUser(user);
+            return await UserDatabase.RegisterUser(user);
         }
 
         //// PUT api/<RegisterUserController>/5
