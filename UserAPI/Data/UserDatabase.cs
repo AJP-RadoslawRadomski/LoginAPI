@@ -6,7 +6,7 @@ namespace UserAPI.Data
 {
     public class UserDatabase
     {
-        public async static Task<User> GetUser(string email, string password)
+        public async static Task<User?> GetUser(string email, string password)
         {
             var user = new User();
             try
@@ -15,9 +15,14 @@ namespace UserAPI.Data
 
                 cnn.Open();
 
-                var dbPassword = await cnn.QuerySingleAsync<string>(@"SELECT Password FROM Users WHERE Email = @Email", new { Email = email });
+                var hashedPassword = await cnn.QuerySingleOrDefaultAsync<string>(@"SELECT Password FROM Users WHERE Email = @Email", new { Email = email });
 
-                if (BCrypt.Net.BCrypt.EnhancedVerify(password, dbPassword))
+                if (string.IsNullOrWhiteSpace(hashedPassword))
+                {
+                    return null;
+                }
+
+                if (BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword))
                 {
                     user = await cnn.QuerySingleOrDefaultAsync<User>(@"
 SELECT [Id]
