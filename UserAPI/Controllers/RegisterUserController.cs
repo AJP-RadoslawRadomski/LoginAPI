@@ -25,7 +25,8 @@ namespace UserAPI.Controllers
         [HttpPost]
         public async Task Post([FromBody] User user)
         {
-
+            var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(user.Password, 10);
+            user.Password = hashedPassword;
             await UserDatabase.RegisterUser(user);
         }
 
