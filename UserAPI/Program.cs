@@ -18,6 +18,9 @@ Log.Logger = new LoggerConfiguration()
             .WriteTo.File(@"Logs\log.txt", rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
+
+builder.Services.AddCors();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -26,9 +29,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors(o => o.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod());
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

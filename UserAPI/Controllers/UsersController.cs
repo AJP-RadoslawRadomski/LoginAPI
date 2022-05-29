@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using UserAPI.Data;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -17,7 +18,7 @@ namespace UserAPI.Controllers
         //}
 
         // GET api/<UsersController>/5
-        [HttpGet("{email}, {password}")]
+        [HttpGet()]
         public async Task<User> Get(string email, string password)
         {
             var user = await UserDatabase.GetUser(email, password);
